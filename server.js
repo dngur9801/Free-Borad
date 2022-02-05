@@ -1,14 +1,21 @@
 const { response, request } = require('express');
 const express = require('express');
 const app = express();
+const http = require('http').createServer(app);
+const { Server, Socket } = require('socket.io');
+const io = new Server(http);
+
 const bodyParser = require('body-parser');
-require('dotenv').config();
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+require('dotenv').config();
+const { ObjectId } = require('mongodb');
 
 const MongoClient = require('mongodb').MongoClient;
 const methodOverride = require('method-override');
 app.use(methodOverride('_method'));
 app.set('view engine', 'ejs');
+const bcrypt = require('bcrypt');
 
 app.use('/public', express.static('public'));
 
@@ -20,7 +27,7 @@ MongoClient.connect(process.env.DB_URL, function (error, client) {
     return console.log(error);
   }
   db = client.db('todoapp');
-  app.listen(8080, function () {
+  http.listen(8080, function () {
     console.log('listening on 8080');
   });
 });
@@ -115,6 +122,22 @@ app.post(
     response.redirect('/');
   }
 );
+app.post('/idcheck', function (req, res) {
+  let signal;
+  db.collection('login')
+    .findOne({ id: req.body.signId })
+    .then(result => {
+      if (result === null) {
+        signal = true;
+      } else {
+        signal = false;
+      }
+      res.json({
+        signal: signal,
+      });
+    });
+});
+
 app.get('/mypage', loginCheck, function (request, response) {
   console.log(request);
   response.render('mypage.ejs', { user: request.user });
@@ -142,14 +165,15 @@ passport.use(
         { id: 입력한아이디 },
         function (에러, 결과) {
           if (에러) return done(에러);
-
           if (!결과)
             return done(null, false, { message: '존재하지않는 아이디요' });
-          if (입력한비번 == 결과.pw) {
-            return done(null, 결과);
-          } else {
-            return done(null, false, { message: '비번틀렸어요' });
-          }
+          bcrypt.compare(입력한비번, 결과.pw, (err, same) => {
+            if (same) {
+              return done(null, 결과);
+            } else {
+              return done(null, false, { message: '비번틀렸어요' });
+            }
+          });
         }
       );
     }
@@ -167,12 +191,14 @@ passport.deserializeUser(function (아이디, done) {
 });
 
 app.post('/register', function (request, response) {
-  db.collection('login').insertOne(
-    { id: request.body.id, pw: request.body.pw },
-    function (error, result) {
-      response.redirect('/');
-    }
-  );
+  bcrypt.hash(request.body.pw, 10, (err, encryptedPassowrd) => {
+    db.collection('login').insertOne(
+      { id: request.body.id, pw: encryptedPassowrd },
+      function (error, result) {
+        response.redirect('/');
+      }
+    );
+  });
 });
 
 app.post('/add', function (request, response) {
@@ -218,5 +244,89 @@ app.delete('/delete/:id', function (request, response) {
       console.log(error);
     }
     response.status(200).send({ message: '성공했습니다.' });
+  });
+});
+
+let multer = require('multer');
+let storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public/image');
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+app.post('/chatroom', loginCheck, function (req, res) {
+  let storage = {
+    title: '무슨무슨채팅방',
+    member: [ObjectId(req.body.receiveId), req.user._id],
+    date: new Date(),
+  };
+
+  db.collection('chatroom')
+    .insertOne(storage)
+    .then(result => {
+      res.send('성공');
+    });
+});
+
+app.get('/chat', function (req, res) {
+  db.collection('chatroom')
+    .find({ member: req.user._id })
+    .toArray()
+    .then(result => {
+      res.render('chat.ejs', { data: result });
+    });
+});
+
+app.post('/message', loginCheck, function (req, res) {
+  console.log(req.body);
+  let storage = {
+    parent: req.body.parent,
+    content: req.body.content,
+    userid: req.user._id,
+    date: new Date(),
+  };
+  db.collection('message')
+    .insertOne(storage)
+    .then(result => {
+      console.log('저장성공');
+      res.send('저장성공');
+    });
+});
+
+app.get('/message/:id', loginCheck, function (req, res) {
+  res.writeHead(200, {
+    Connection: 'keep-alive',
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+  });
+
+  db.collection('message')
+    .find({ parent: req.params.id })
+    .toArray()
+    .then(result => {
+      res.write('event: test\n');
+      res.write('data:' + JSON.stringify(result) + '\n\n');
+    });
+});
+
+app.get('/socket', function (req, res) {
+  res.render('socket.ejs');
+});
+
+io.on('connection', function (socket) {
+  console.log('접속됨');
+
+  socket.on('room1-send', function (data) {
+    io.to('room1').emit('broadcast', data);
+  });
+  socket.on('joinroom', function (data) {
+    socket.join('room1');
+  });
+  socket.on('user-send', function (data) {
+    console.log(data);
+    io.emit('broadcast', data);
   });
 });

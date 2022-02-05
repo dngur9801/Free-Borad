@@ -46,6 +46,9 @@
           <button class="btn btn-danger delete" data-id="<%= posts[i]._id%>">
             삭제
           </button>
+          <button class="btn btn-secondary chat" data-id="<%= posts[i].작성자%>" >
+            채팅방
+          </button>
         </li>
         <% } %>
       </ul>
@@ -74,6 +77,26 @@
         e.target.parentNode.style.display = 'none';
       });
     }
+
+    const chats = document.querySelectorAll('.chat')
+   chats.forEach(item => item.addEventListener('click',chatRequest));
+
+   function chatRequest(e) {
+     let id = e.target.dataset.id;
+     console.log(id)
+     fetch("/chatroom",{
+      method : "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body : JSON.stringify({
+       receiveId : id
+    }),
+    })
+    .then((response) => response.json())
+
+   }
+
     document.querySelector('#search').addEventListener('submit', (e) => {
       e.preventDefault();
       const inputVal = document.querySelector('#search-input').value;
