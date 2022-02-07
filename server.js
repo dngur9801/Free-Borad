@@ -35,12 +35,13 @@ MongoClient.connect(process.env.DB_URL, function (error, client) {
 app.get('/list', function (request, response) {
   db.collection('post')
     .find()
+    .sort({ 날짜정렬: -1 })
     .toArray(function (error, result) {
-      console.log(result);
       response.render('list.ejs', { posts: result });
     });
 });
 app.get('/search', (request, response) => {
+  console.log(request.query);
   var 검색조건 = [
     {
       $search: {
@@ -51,7 +52,6 @@ app.get('/search', (request, response) => {
         },
       },
     },
-    {},
   ];
   db.collection('post')
     .aggregate(검색조건)
@@ -73,7 +73,6 @@ app.get('/detail/:id', function (request, response) {
   db.collection('post').findOne(
     { _id: parseInt(request.params.id) },
     function (error, result) {
-      console.log(result);
       response.render('detail.ejs', { data: result });
     }
   );
@@ -83,7 +82,6 @@ app.get('/edit/:id', function (request, response) {
   db.collection('post').findOne(
     { _id: parseInt(request.params.id) },
     function (error, result) {
-      console.log(result);
       response.render('edit.ejs', { post: result });
     }
   );
@@ -113,15 +111,19 @@ app.use(passport.session());
 app.get('/login', function (request, response) {
   response.render('login');
 });
+
 app.post(
   '/login',
   passport.authenticate('local', {
     failureRedirect: '/fail',
   }),
   function (request, response) {
-    response.redirect('/');
+    response.redirect('/list');
   }
 );
+app.get('/fail', function (req, res) {
+  res.render('fail.ejs');
+});
 app.post('/idcheck', function (req, res) {
   let signal;
   db.collection('login')
@@ -139,7 +141,6 @@ app.post('/idcheck', function (req, res) {
 });
 
 app.get('/mypage', loginCheck, function (request, response) {
-  console.log(request);
   response.render('mypage.ejs', { user: request.user });
 });
 
@@ -190,29 +191,44 @@ passport.deserializeUser(function (아이디, done) {
   });
 });
 
+app.get('/logout', function (req, res) {
+  req.logout();
+  res.redirect('/login');
+});
+
 app.post('/register', function (request, response) {
   bcrypt.hash(request.body.pw, 10, (err, encryptedPassowrd) => {
     db.collection('login').insertOne(
       { id: request.body.id, pw: encryptedPassowrd },
       function (error, result) {
-        response.redirect('/');
+        response.redirect('/login');
       }
     );
   });
 });
 
 app.post('/add', function (request, response) {
-  response.send('전송완료');
+  response.render('write_success.ejs');
 
   db.collection('counter').findOne(
     { name: '게시물갯수' },
     function (error, result) {
       let totalNum = result.totalPost;
+
+      var today = new Date();
+      var year = today.getFullYear();
+      var month = ('0' + (today.getMonth() + 1)).slice(-2);
+      var day = ('0' + today.getDate()).slice(-2);
+      var dateString = year + '-' + month + '-' + day;
+
       let stroage = {
         _id: totalNum + 1,
-        작성자: request.user._id,
+        작성자: request.user.id,
         제목: request.body.title,
         날짜: request.body.date,
+        작성일: dateString,
+        조회수: 0,
+        날짜정렬: new Date(),
       };
       db.collection('post').insertOne(stroage, function (error, result) {
         console.log('저장완료');
@@ -231,8 +247,6 @@ app.post('/add', function (request, response) {
 });
 
 app.delete('/delete/:id', function (request, response) {
-  console.log(request.params.id);
-
   let deleteData = {
     _id: parseInt(request.params.id),
     작성자: request.user._id,
@@ -281,7 +295,6 @@ app.get('/chat', function (req, res) {
 });
 
 app.post('/message', loginCheck, function (req, res) {
-  console.log(req.body);
   let storage = {
     parent: req.body.parent,
     content: req.body.content,

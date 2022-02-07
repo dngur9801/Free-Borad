@@ -22,17 +22,37 @@
   </head>
   <body>
     <%- include('nav.html') %>
+    <div class="container mt-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page"> 님의 게시물입니다.</li>
+      </ol>
+    </div>
+    <div class="container mt-3">
+      <form action="/add" method="POST">
+        <div class="form-group">
+          <label for="title">제목</label>
+          <input
+            type="text"
+            class="form-control"
+            name="title"
+            id="title"
+            readonly
+          />
+        </div>
+        <div class="form-group">
+          <label for="date">내용</label>
+          <textarea
+            type="text"
+            class="form-control"
+            name="date"
+            id="date"
+            style="height: 300px; resize: none"
+            readonly
+          ></textarea>
+        </div>
+      </form>
+    </div>
 
-    <div class="container mt-4">
-        <h4 class="text-center">상세페이지</h4>
-        <div class="card" style="width: 100%;">
-        <div class="card-body">
-        <h5 class="card-title"><%= data.제목%></h5>
-        <h6 class="card-subtitle mb-2 text-muted"><%= data.날짜%> </h6>
-        <a href="#" class="card-link">수정하기</a>
-    </div>
-      </div>
-    </div>
     <script
       src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
       integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
