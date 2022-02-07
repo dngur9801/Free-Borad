@@ -19,6 +19,17 @@
     <link rel="stylesheet" href="/public/main.css" />
 
     <title>Hello, world!</title>
+    <style>
+        .subject {
+        text-decoration: none;
+        color: black;
+        cursor: pointer;        
+      }
+      .subject:hover {
+        color: black;
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
     <%- include('nav.html') %>
@@ -50,7 +61,7 @@
         <% for (let i = 0; i < search.length; i++) { %>
         <tr>
           <td style="width: 10%" class="text-center"><%= search.length -i %></td>
-          <td style="width: 40%"><%= search[i].제목 %></td>
+          <td style="width: 40%"><a class="subject" id="click_subject" data-id="<%= search[i]._id %>"><%= search[i].제목 %></td>
           <td style="width: 10%" class="text-center"><%= search[i].작성자 %></td>
           <td style="width: 20%" class="text-center"><%= search[i].작성일 %></td>
           <td style="width: 10%" class="text-center"><%= search[i].조회수 %></td>
@@ -88,5 +99,13 @@
       const inputVal = document.querySelector('#search-input').value;
       window.location.replace ('/search?value=' + inputVal)
     });
+
+    const clickSubject =  document.querySelectorAll('#click_subject')
+    clickSubject.forEach((item) => item.addEventListener('click' ,e => {
+      const id = e.target.dataset.id
+      console.log(id)
+      
+    location.href = '/detail/' + id
+      }))
   </script>
 </html>

@@ -69,15 +69,6 @@ app.get('/', function (request, response) {
   response.render('index.ejs');
 });
 
-app.get('/detail/:id', function (request, response) {
-  db.collection('post').findOne(
-    { _id: parseInt(request.params.id) },
-    function (error, result) {
-      response.render('detail.ejs', { data: result });
-    }
-  );
-});
-
 app.get('/edit/:id', function (request, response) {
   db.collection('post').findOne(
     { _id: parseInt(request.params.id) },
@@ -89,10 +80,10 @@ app.get('/edit/:id', function (request, response) {
 app.put('/edit', function (request, response) {
   db.collection('post').updateOne(
     { _id: parseInt(request.body.id) },
-    { $set: { 제목: request.body.title, 날짜: request.body.date } },
+    { $set: { 제목: request.body.title, 내용: request.body.content } },
     function (error, result) {
       console.log('수정완료');
-      response.redirect('/list');
+      response.render('edit_success.ejs');
     }
   );
 });
@@ -138,6 +129,30 @@ app.post('/idcheck', function (req, res) {
         signal: signal,
       });
     });
+});
+
+app.get('/detail/:id', function (request, response) {
+  let answer;
+  db.collection('post').findOne(
+    { _id: parseInt(request.params.id) },
+    function (error, result) {
+      if (result.작성자 === request.user.id) {
+        answer = true;
+      } else {
+        answer = false;
+      }
+      response.render('detail.ejs', { data: result, answer: answer });
+      db.collection('post').updateOne(
+        { _id: parseInt(request.params.id) },
+        { $inc: { 조회수: 1 } },
+        function (error, result) {
+          if (error) {
+            return console.log(error);
+          }
+        }
+      );
+    }
+  );
 });
 
 app.get('/mypage', loginCheck, function (request, response) {
@@ -225,7 +240,7 @@ app.post('/add', function (request, response) {
         _id: totalNum + 1,
         작성자: request.user.id,
         제목: request.body.title,
-        날짜: request.body.date,
+        내용: request.body.content,
         작성일: dateString,
         조회수: 0,
         날짜정렬: new Date(),
@@ -249,97 +264,13 @@ app.post('/add', function (request, response) {
 app.delete('/delete/:id', function (request, response) {
   let deleteData = {
     _id: parseInt(request.params.id),
-    작성자: request.user._id,
+    작성자: request.user.id,
   };
-
   db.collection('post').deleteOne(deleteData, function (error, result) {
     console.log('삭제완료');
     if (error) {
       console.log(error);
     }
     response.status(200).send({ message: '성공했습니다.' });
-  });
-});
-
-let multer = require('multer');
-let storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, './public/image');
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
-
-app.post('/chatroom', loginCheck, function (req, res) {
-  let storage = {
-    title: '무슨무슨채팅방',
-    member: [ObjectId(req.body.receiveId), req.user._id],
-    date: new Date(),
-  };
-
-  db.collection('chatroom')
-    .insertOne(storage)
-    .then(result => {
-      res.send('성공');
-    });
-});
-
-app.get('/chat', function (req, res) {
-  db.collection('chatroom')
-    .find({ member: req.user._id })
-    .toArray()
-    .then(result => {
-      res.render('chat.ejs', { data: result });
-    });
-});
-
-app.post('/message', loginCheck, function (req, res) {
-  let storage = {
-    parent: req.body.parent,
-    content: req.body.content,
-    userid: req.user._id,
-    date: new Date(),
-  };
-  db.collection('message')
-    .insertOne(storage)
-    .then(result => {
-      console.log('저장성공');
-      res.send('저장성공');
-    });
-});
-
-app.get('/message/:id', loginCheck, function (req, res) {
-  res.writeHead(200, {
-    Connection: 'keep-alive',
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-  });
-
-  db.collection('message')
-    .find({ parent: req.params.id })
-    .toArray()
-    .then(result => {
-      res.write('event: test\n');
-      res.write('data:' + JSON.stringify(result) + '\n\n');
-    });
-});
-
-app.get('/socket', function (req, res) {
-  res.render('socket.ejs');
-});
-
-io.on('connection', function (socket) {
-  console.log('접속됨');
-
-  socket.on('room1-send', function (data) {
-    io.to('room1').emit('broadcast', data);
-  });
-  socket.on('joinroom', function (data) {
-    socket.join('room1');
-  });
-  socket.on('user-send', function (data) {
-    console.log(data);
-    io.emit('broadcast', data);
   });
 });

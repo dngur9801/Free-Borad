@@ -16,7 +16,7 @@
       crossorigin="anonymous"
     />
 
-    <link rel="stylesheet" href="/public/main.css">
+    <link rel="stylesheet" href="/public/main.css" />
 
     <title>Hello, world!</title>
   </head>
@@ -24,33 +24,56 @@
     <%- include('nav.html') %>
     <div class="container mt-3">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item active" aria-current="page"> 님의 게시물입니다.</li>
+        <li
+          class="breadcrumb-item active"
+          aria-current="page"
+          id="myboard"
+          data-value="<%= answer %>"
+        >
+          <%= data.작성자 %> 님의 게시물입니다.
+        </li>
       </ol>
     </div>
     <div class="container mt-3">
-      <form action="/add" method="POST">
-        <div class="form-group">
-          <label for="title">제목</label>
-          <input
-            type="text"
-            class="form-control"
-            name="title"
-            id="title"
-            readonly
-          />
-        </div>
-        <div class="form-group">
-          <label for="date">내용</label>
-          <textarea
-            type="text"
-            class="form-control"
-            name="date"
-            id="date"
-            style="height: 300px; resize: none"
-            readonly
-          ></textarea>
-        </div>
-      </form>
+      <div class="form-group">
+        <label for="title">제목</label>
+        <input
+          type="text"
+          class="form-control"
+          name="title"
+          id="title"
+          readonly
+          value="<%= data.제목 %>"
+        />
+      </div>
+      <div class="form-group">
+        <label for="content">내용</label>
+        <textarea
+          type="text"
+          class="form-control"
+          name="content"
+          style="height: 300px; resize: none"
+          readonly
+        >
+<%= data.내용 %></textarea
+        >
+      </div>
+      <button
+        type="button"
+        class="btn btn-danger float-left mr-3"
+        id="delete"
+        data-id="<%= data._id %>"
+      >
+        삭제
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary float-left"
+        id="edit"
+        data-id="<%= data._id %>"
+      >
+        수정
+      </button>
     </div>
 
     <script
@@ -64,6 +87,27 @@
       crossorigin="anonymous"
     ></script>
   </body>
+  <script>
+    const value = document.querySelector('#myboard').dataset.value;
+    const deleteBtn = document.querySelector('#delete');
+    const edit = document.querySelector('#edit');
 
+    if (value === 'false') {
+      deleteBtn.style.display = 'none';
+      edit.style.display = 'none';
+    } else if (value === 'true') {
+      edit.style.display = 'block';
+    }
+    edit.addEventListener('click', e => {
+      const id = e.target.dataset.id;
+      location.href = '/edit/' + id;
+    });
+    deleteBtn.addEventListener('click', e => {
+      const id = e.target.dataset.id;
+      console.log(id);
+      fetch('/delete/' + id, {
+        method: 'DELETE',
+      }).then(result => console.log(result));
+    });
   </script>
 </html>
