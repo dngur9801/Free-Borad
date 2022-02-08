@@ -33,13 +33,15 @@ MongoClient.connect(process.env.DB_URL, function (error, client) {
 });
 
 app.get('/list', function (request, response) {
+  console.log(request.query);
   db.collection('post')
     .find()
     .sort({ 날짜정렬: -1 })
     .toArray(function (error, result) {
-      response.render('list.ejs', { posts: result });
+      response.render('list.ejs', { posts: result, view: request.query });
     });
 });
+
 app.get('/search', (request, response) => {
   console.log(request.query);
   var 검색조건 = [
@@ -156,7 +158,12 @@ app.get('/detail/:id', function (request, response) {
 });
 
 app.get('/mypage', loginCheck, function (request, response) {
-  response.render('mypage.ejs', { user: request.user });
+  db.collection('post')
+    .find({ 작성자: request.user.id })
+    .sort({ 날짜정렬: -1 })
+    .toArray(function (error, result) {
+      response.render('mypage.ejs', { user: request.user, userBoard: result });
+    });
 });
 
 function loginCheck(request, response, next) {

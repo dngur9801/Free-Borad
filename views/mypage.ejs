@@ -16,11 +16,65 @@
       crossorigin="anonymous"
     />
 
-    <title>Hello, world!</title>
+    <title>자유게시판</title>
+    <style>
+      .subject {
+        text-decoration: none;
+        color: black;
+        cursor: pointer;        
+      }
+      .subject:hover {
+        color: black;
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
     <%- include('nav.html') %>
-    <p><%= user.id%>님의 페이지입니다.</p>
+    <div class="container mt-3">
+      <ol class="breadcrumb justify-content-center">
+        <li
+          class="breadcrumb-item active"
+          aria-current="page"
+        >
+        <%= user.id%>님의 페이지입니다.
+        </li>
+      </ol>
+    </div>
+    <form id="search">
+      <div class="container input-group mt-5 mb-5">
+          <input type="text" class="form-control" id="search-input" />
+          <button
+            type="submit"
+            class="input-group-append btn btn-danger"
+            
+          > 검색
+          </button>
+        </form>
+      </div>
+      <table class="table" style="width: 80%; margin: auto;">
+        <thead>
+          <tr>
+            <th scope="col" class="text-center">번호</th>
+            <th scope="col" class="text-center">제목</th>
+            <th scope="col" class="text-center">글쓴이</th>
+            <th scope="col" class="text-center">작성일</th>
+            <th scope="col" class="text-center">조회수</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (let i = 0; i < userBoard.length; i++) { %>
+          <tr>
+            <td style="width: 10%" class="text-center"><%= userBoard.length -i %></td>
+            <td style="width: 40%"><a class="subject" id="click_subject" data-id="<%= userBoard[i]._id %>"><%= userBoard[i].제목 %></a></td>
+            <td style="width: 10%" class="text-center"><%= userBoard[i].작성자 %></td>
+            <td style="width: 20%" class="text-center"><%= userBoard[i].작성일 %></td>
+            <td style="width: 10%" class="text-center"><%= userBoard[i].조회수 %></td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+
       <script
         src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
@@ -33,4 +87,23 @@
       ></script>
     </p>
   </body>
+  <script>
+
+
+document.querySelector('#search').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const inputVal = document.querySelector('#search-input').value;
+      window.location.href = '/search?value=' + inputVal
+    });
+
+   const clickSubject =  document.querySelectorAll('#click_subject')
+    clickSubject.forEach((item) => item.addEventListener('click' ,e => {
+      const id = e.target.dataset.id
+      console.log(id)
+      
+    location.href = '/detail/' + id
+      }))
+   
+    document.querySelector('#mypage').classList.add('active');
+  </script>
 </html>

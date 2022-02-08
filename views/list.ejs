@@ -34,6 +34,19 @@
   <body>
     <%- include('nav.html') %>
     
+    <div class="container mt-3">
+      <ol class="breadcrumb justify-content-center">
+        <li
+          class="breadcrumb-item active"
+          aria-current="page"
+          id="pnum"
+          data-num="<%=view.pnum%>"
+        >
+          자유게시판
+        </li>
+      </ol>
+    </div>
+
     <form id="search">
     <div class="container input-group mt-5 mb-5">
         <input type="text" class="form-control" id="search-input" />
@@ -56,18 +69,36 @@
         </tr>
       </thead>
       <tbody>
-        <% for (let i = 0; i < posts.length; i++) { %>
+        <%let startNum = parseInt(view.offset) || 0 %>
+        <%let pageView = parseInt(view.max) || 7 %>
+        <%let listView = posts.slice(startNum,startNum+pageView)%>
+        <% for (let i = 0; i < listView.length; i++) { %>
         <tr>
-          <td style="width: 10%" class="text-center"><%= posts.length -i %></td>
-          <td style="width: 40%"><a class="subject" id="click_subject" data-id="<%= posts[i]._id %>"><%= posts[i].제목 %></a></td>
-          <td style="width: 10%" class="text-center"><%= posts[i].작성자 %></td>
-          <td style="width: 20%" class="text-center"><%= posts[i].작성일 %></td>
-          <td style="width: 10%" class="text-center"><%= posts[i].조회수 %></td>
+          <td style="width: 10%" class="text-center"><%= posts.length -i - startNum %></td>
+          <td style="width: 40%"><a class="subject" id="click_subject" data-id="<%= listView[i]._id %>"><%= listView[i].제목 %></a></td>
+          <td style="width: 10%" class="text-center"><%= listView[i].작성자 %></td>
+          <td style="width: 20%" class="text-center"><%= listView[i].작성일 %></td>
+          <td style="width: 10%" class="text-center"><%= listView[i].조회수 %></td>
         </tr>
         <% } %>
       </tbody>
     </table>
-    
+
+
+    <% let pageNums = Math.ceil(posts.length / pageView) %>
+    <div class="container mt-5">
+			<div class="row">
+				<div class="col">
+					<ul class="pagination justify-content-center">
+						<li class="page-item previous"><a class="page-link">Previous</a></li>
+            <% for (let i = 0; i < pageNums; i++) { %>
+						<li class="page-item page_num" data-number="<%= i %>"><a class="page-link" ><%= i+1 %></a></li>
+            <% } %>
+						<li class="page-item next"><a class="page-link">Next</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
     <script
       src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
       integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
@@ -80,22 +111,59 @@
     ></script>
   </body>
   <script>
-  
-
     document.querySelector('#search').addEventListener('submit', (e) => {
       e.preventDefault();
       const inputVal = document.querySelector('#search-input').value;
       window.location.href = '/search?value=' + inputVal
     });
-
-   const clickSubject =  document.querySelectorAll('#click_subject')
+    
+    const clickSubject =  document.querySelectorAll('#click_subject')
     clickSubject.forEach((item) => item.addEventListener('click' ,e => {
       const id = e.target.dataset.id
       console.log(id)
       
-    location.href = '/detail/' + id
-      }))
-   
+      location.href = '/detail/' + id
+    }))
+
+    
+    const pageNum = document.querySelectorAll('.page_num')
+    let count = document.querySelector('#pnum').dataset.num || 0
+    let pageView = 7
+    pageNum[count].classList.add('active')
+
+
+    document.querySelector('.previous').addEventListener('click', () => {
+      pageNum.forEach(item => item.classList.remove('active'))
+      count--
+      if(count < 0) {
+        count = pageNum.length - 1
+      }
+      pageNum[count].classList.add('active')
+      location.href = `/list?offset=${pageView * count}&max=${pageView}&pnum=${count}`
+    })
+
+    document.querySelector('.next').addEventListener('click', () => {
+      pageNum.forEach(item => item.classList.remove('active'))
+      count++
+      if(count >= pageNum.length) {
+        count = 0
+      }
+      pageNum[count].classList.add('active')
+      location.href = `/list?offset=${pageView * count}&max=${pageView}&pnum=${count}`
+    })
+
+
+  function pageNumClick(e) {
+    pageNum.forEach(item => item.classList.remove('active'))
+    const nowClick = e.currentTarget.dataset.number
+    count = nowClick
+    pageNum[count].classList.add('active')
+    location.href = `/list?offset=${pageView * count}&max=${pageView}&pnum=${count}`
+
+  }
+
+
+  pageNum.forEach(item => item.addEventListener('click',pageNumClick))
     document.querySelector('#list').classList.add('active');
   </script>
 </html>
