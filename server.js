@@ -48,7 +48,7 @@ app.get('/search', (request, response) => {
         index: 'titleSearch',
         text: {
           query: request.query.value,
-          path: '제목', // 제목날짜 둘다 찾고 싶으면 ['제목', '날짜']
+          path: '제목',
         },
       },
     },
