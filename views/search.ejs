@@ -82,18 +82,7 @@
     ></script>
   </body>
   <script>
-    const deletes = document.querySelectorAll('.delete');
-    deletes.forEach(item => item.addEventListener('click', deleteRequest));
-
-    function deleteRequest(e) {
-      const id = e.target.dataset.id;
-      fetch('/delete/' + id, {
-        method: 'DELETE',
-      }).then(response => {
-        console.log('성공');
-        e.target.parentNode.style.display = 'none';
-      });
-    }
+ 
     document.querySelector('#search').addEventListener('submit', (e) => {
         e.preventDefault();
       const inputVal = document.querySelector('#search-input').value;

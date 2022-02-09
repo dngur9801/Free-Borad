@@ -33,7 +33,6 @@ MongoClient.connect(process.env.DB_URL, function (error, client) {
 });
 
 app.get('/list', function (request, response) {
-  console.log(request.query);
   db.collection('post')
     .find()
     .sort({ 날짜정렬: -1 })
@@ -43,7 +42,6 @@ app.get('/list', function (request, response) {
 });
 
 app.get('/search', (request, response) => {
-  console.log(request.query);
   var 검색조건 = [
     {
       $search: {
@@ -58,7 +56,6 @@ app.get('/search', (request, response) => {
   db.collection('post')
     .aggregate(검색조건)
     .toArray((error, result) => {
-      console.log(result);
       response.render('search.ejs', { search: result });
     });
 });
@@ -84,7 +81,6 @@ app.put('/edit', function (request, response) {
     { _id: parseInt(request.body.id) },
     { $set: { 제목: request.body.title, 내용: request.body.content } },
     function (error, result) {
-      console.log('수정완료');
       response.render('edit_success.ejs');
     }
   );
@@ -133,30 +129,6 @@ app.post('/idcheck', function (req, res) {
     });
 });
 
-app.get('/detail/:id', function (request, response) {
-  let answer;
-  db.collection('post').findOne(
-    { _id: parseInt(request.params.id) },
-    function (error, result) {
-      if (result.작성자 === request.user.id) {
-        answer = true;
-      } else {
-        answer = false;
-      }
-      response.render('detail.ejs', { data: result, answer: answer });
-      db.collection('post').updateOne(
-        { _id: parseInt(request.params.id) },
-        { $inc: { 조회수: 1 } },
-        function (error, result) {
-          if (error) {
-            return console.log(error);
-          }
-        }
-      );
-    }
-  );
-});
-
 app.get('/mypage', loginCheck, function (request, response) {
   db.collection('post')
     .find({ 작성자: request.user.id })
@@ -183,7 +155,6 @@ passport.use(
       passReqToCallback: false,
     },
     function (입력한아이디, 입력한비번, done) {
-      //console.log(입력한아이디, 입력한비번);
       db.collection('login').findOne(
         { id: 입력한아이디 },
         function (에러, 결과) {
@@ -253,7 +224,6 @@ app.post('/add', function (request, response) {
         날짜정렬: new Date(),
       };
       db.collection('post').insertOne(stroage, function (error, result) {
-        console.log('저장완료');
         db.collection('counter').updateOne(
           { name: '게시물갯수' },
           { $inc: { totalPost: 1 } },
@@ -268,13 +238,74 @@ app.post('/add', function (request, response) {
   );
 });
 
+app.post('/comment', function (req, res) {
+  const now = new Date();
+  const utcNow = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+  const koreaTimeDiff = 9 * 60 * 60 * 1000;
+  const koreaNow = new Date(utcNow + koreaTimeDiff);
+  const datearr = String(koreaNow).split(' ');
+
+  const year = now.getFullYear();
+  const month = ('0' + (now.getMonth() + 1)).slice(-2);
+  const day = ('0' + now.getDate()).slice(-2);
+  const dateString = year + '-' + month + '-' + day;
+  const currentTime = dateString + ' ' + datearr[4];
+
+  console.log(req.body);
+  const storage = {
+    user: req.body.user_name,
+    date: currentTime,
+    content: req.body.comment_write,
+    id: req.body.id,
+  };
+  db.collection('comment').insertOne(storage, function (err, result) {
+    res.redirect('/detail/' + req.body.id);
+  });
+});
+
+app.get('/detail/:id', function (request, response) {
+  let answer;
+  let comment;
+  db.collection('comment')
+    .find({ id: request.params.id })
+    .toArray(function (arr, result) {
+      comment = result;
+      db.collection('post').findOne(
+        { _id: parseInt(request.params.id) },
+        function (error, result) {
+          if (result.작성자 === request.user.id) {
+            answer = true;
+          } else {
+            answer = false;
+          }
+
+          db.collection('post').updateOne(
+            { _id: parseInt(request.params.id) },
+            { $inc: { 조회수: 1 } },
+            function (error, result) {
+              if (error) {
+                return console.log(error);
+              }
+            }
+          );
+          console.log(comment);
+          response.render('detail.ejs', {
+            comment: comment,
+            data: result,
+            answer: answer,
+            user: request.user.id,
+          });
+        }
+      );
+    });
+});
+
 app.delete('/delete/:id', function (request, response) {
   let deleteData = {
     _id: parseInt(request.params.id),
     작성자: request.user.id,
   };
   db.collection('post').deleteOne(deleteData, function (error, result) {
-    console.log('삭제완료');
     if (error) {
       console.log(error);
     }

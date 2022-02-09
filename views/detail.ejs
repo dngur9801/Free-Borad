@@ -58,6 +58,8 @@
 <%= data.내용 %></textarea
         >
       </div>
+    </div>
+    <div class="container" style="height: 50px" id="del_edit_btns">
       <button
         type="button"
         class="btn btn-danger float-left mr-3"
@@ -75,7 +77,72 @@
         수정
       </button>
     </div>
+    <div class="container mt-3">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item active" aria-current="page">댓글 <%= comment.length%> </li>
+        </ol>
+      </nav>
+    </div>
+    <div class="container">
+      <% for (let i = 0; i < comment.length; i++) { %>
+      <div class="card" style="width: 100%">
+        <div class="card-body border-bottom">
+          <ol class="breadcrumb bg-light">
+            <li class="breadcrumb-item"><a><%= comment[i].user%></a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+              <%= comment[i].date%>
+            </li>
+          </ol>
+          <p class="card-text pl-3"><%= comment[i].content%></p>
+        </div>
+      </div>
+      <% } %>
+      </div>
+    </div>
 
+    <div class="container mt-3">
+      <form
+        action="/comment"
+        method="POST"
+        enctype="application/x-www-form-urlencoded"
+        id="comment_submit"
+      >
+        <input type="hidden" name="id" value="<%= data._id %>" />
+        <div class="card mb-2">
+          <div class="card-header bg-light">
+            <i class="fa fa-comment fa"></i> 댓글 남기기
+          </div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">
+                <div class="form-inline mb-2">
+                  <label for="replyId"
+                    ><i class="fa fa-user-circle-o fa-2x"></i
+                  ></label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="replyId"
+                    readonly
+                    name="user_name"
+                    value="<%=user%>"
+                  />
+                </div>
+                <input
+                  class="form-control comment_write"
+                  id="exampleFormControlTextarea1"
+                  rows="2"
+                  style="resize: none"
+                  name="comment_write"
+                ></input>
+                <button type="submit" class="btn btn-dark mt-3">등록</button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </form>
+    </div>
     <script
       src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
       integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
@@ -91,12 +158,13 @@
     const value = document.querySelector('#myboard').dataset.value;
     const deleteBtn = document.querySelector('#delete');
     const edit = document.querySelector('#edit');
+    const delEditBtns = document.querySelector('#del_edit_btns');
+    const commentWrite = document.querySelector('.comment_write');
 
     if (value === 'false') {
-      deleteBtn.style.display = 'none';
-      edit.style.display = 'none';
+      delEditBtns.style.display = 'none';
     } else if (value === 'true') {
-      edit.style.display = 'block';
+      delEditBtns.style.display = 'block';
     }
     edit.addEventListener('click', e => {
       const id = e.target.dataset.id;
@@ -109,5 +177,29 @@
         method: 'DELETE',
       }).then(result => console.log(result));
     });
+
+    document.querySelector('#comment_submit').addEventListener('submit', e => {
+      e.preventDefault();
+      if (commentWrite.value == '') {
+        alert('등록할 댓글을 작성하세요');
+      } else {
+        e.target.submit();
+      }
+    });
+
+    const now = new Date(); 
+const utcNow = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
+const koreaTimeDiff = 9 * 60 * 60 * 1000; 
+const koreaNow = new Date(utcNow + koreaTimeDiff); 
+const datearr = String(koreaNow).split(' ')
+
+const year = now.getFullYear();
+const month = ('0' + (now.getMonth() + 1)).slice(-2);
+const day = ('0' + now.getDate()).slice(-2);
+const dateString = year + '-' + month + '-' + day;
+const currentTime = dateString + ' ' + datearr[4]
+
+
+console.log(currentTime)
   </script>
 </html>

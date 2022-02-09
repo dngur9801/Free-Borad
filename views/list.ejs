@@ -29,6 +29,9 @@
         color: black;
         text-decoration: underline;
       }
+      .table tbody tr:nth-child(odd) {
+        background-color: rgb(236, 251, 255);
+      }
     </style>
   </head>
   <body>
@@ -70,7 +73,7 @@
       </thead>
       <tbody>
         <%let startNum = parseInt(view.offset) || 0 %>
-        <%let pageView = parseInt(view.max) || 7 %>
+        <%let pageView = parseInt(view.max) || 8 %>
         <%let listView = posts.slice(startNum,startNum+pageView)%>
         <% for (let i = 0; i < listView.length; i++) { %>
         <tr>
@@ -128,7 +131,7 @@
     
     const pageNum = document.querySelectorAll('.page_num')
     let count = document.querySelector('#pnum').dataset.num || 0
-    let pageView = 7
+    let pageView = 8
     pageNum[count].classList.add('active')
 
 
