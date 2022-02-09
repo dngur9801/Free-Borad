@@ -251,16 +251,32 @@ app.post('/comment', function (req, res) {
   const dateString = year + '-' + month + '-' + day;
   const currentTime = dateString + ' ' + datearr[4];
 
-  console.log(req.body);
-  const storage = {
-    user: req.body.user_name,
-    date: currentTime,
-    content: req.body.comment_write,
-    id: req.body.id,
-  };
-  db.collection('comment').insertOne(storage, function (err, result) {
-    res.redirect('/detail/' + req.body.id);
-  });
+  let totalNum;
+  db.collection('counter').findOne(
+    { name: '댓글갯수' },
+    function (err, result) {
+      console.log(result);
+      totalNum = result.totalcomment;
+
+      const storage = {
+        _id: totalNum + 1,
+        user: req.body.user_name,
+        date: currentTime,
+        content: req.body.comment_write,
+        id: req.body.id,
+      };
+      db.collection('comment').insertOne(storage, function (err, result) {
+        res.redirect('/detail/' + req.body.id);
+      });
+      db.collection('counter').updateOne(
+        { name: '댓글갯수' },
+        { $inc: { totalcomment: 1 } },
+        function (err, result) {
+          console.log(err);
+        }
+      );
+    }
+  );
 });
 
 app.get('/detail/:id', function (request, response) {
@@ -268,8 +284,10 @@ app.get('/detail/:id', function (request, response) {
   let comment;
   db.collection('comment')
     .find({ id: request.params.id })
+    .sort({ _id: -1 })
     .toArray(function (arr, result) {
       comment = result;
+
       db.collection('post').findOne(
         { _id: parseInt(request.params.id) },
         function (error, result) {
@@ -309,6 +327,6 @@ app.delete('/delete/:id', function (request, response) {
     if (error) {
       console.log(error);
     }
-    response.status(200).send({ message: '성공했습니다.' });
+    response.json({ success: true });
   });
 });

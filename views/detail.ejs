@@ -172,10 +172,17 @@
     });
     deleteBtn.addEventListener('click', e => {
       const id = e.target.dataset.id;
-      console.log(id);
-      fetch('/delete/' + id, {
-        method: 'DELETE',
-      }).then(result => console.log(result));
+      if(confirm('삭제하시겠습니까?')) {
+        fetch('/delete/' + id, {
+          method: 'DELETE',
+        }).then(result => result.json())
+        .then(data => {
+          if(data.success == true) {
+            alert('삭제되었습니다.')
+            location.href = '/list'
+          }
+        })
+      }
     });
 
     document.querySelector('#comment_submit').addEventListener('submit', e => {
@@ -200,6 +207,5 @@ const dateString = year + '-' + month + '-' + day;
 const currentTime = dateString + ' ' + datearr[4]
 
 
-console.log(currentTime)
   </script>
 </html>
