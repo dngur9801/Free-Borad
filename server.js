@@ -20,7 +20,9 @@ const bcrypt = require('bcrypt');
 app.use('/public', express.static('public'));
 
 var db;
-
+setInterval(function () {
+  http.get('http://dngur9801.herokuapp.com');
+}, 600000);
 /* TODO 기능 */
 MongoClient.connect(process.env.DB_URL, function (error, client) {
   if (error) {
