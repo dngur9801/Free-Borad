@@ -27,7 +27,7 @@ MongoClient.connect(process.env.DB_URL, function (error, client) {
     return console.log(error);
   }
   db = client.db('todoapp');
-  http.listen(process.env.POR || 8080, function () {
+  http.listen(process.env.PORT || 8080, function () {
     console.log('listening on 8080');
   });
 });
