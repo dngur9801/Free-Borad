@@ -93,11 +93,11 @@
 			<div class="row">
 				<div class="col">
 					<ul class="pagination justify-content-center">
-						<li class="page-item previous"><a class="page-link">Previous</a></li>
+						<li class="page-item previous" role="button"><a class="page-link">Previous</a></li>
             <% for (let i = 0; i < pageNums; i++) { %>
-						<li class="page-item page_num" data-number="<%= i %>"><a class="page-link" ><%= i+1 %></a></li>
+						<li class="page-item page_num" role="button" data-number="<%= i %>"><a class="page-link" ><%= i+1 %></a></li>
             <% } %>
-						<li class="page-item next"><a class="page-link">Next</a></li>
+						<li class="page-item next" role="button"><a class="page-link">Next</a></li>
 					</ul>
 				</div>
 			</div>
