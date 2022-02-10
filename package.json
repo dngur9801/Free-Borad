@@ -2,8 +2,8 @@
   "name": "applevue",
   "version": "1.0.0",
   "main": "server.js",
-  "type": "module",
   "engines": {
+    "type": "module",
     "node": "16.13.0"
   },
   "scripts": {
