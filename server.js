@@ -24,12 +24,13 @@ setInterval(function () {
   http.get('http://dngur9801.herokuapp.com');
 }, 600000);
 /* TODO 기능 */
+let port = process.env.PORT || 8080;
 MongoClient.connect(process.env.MONGODB_URI, function (error, client) {
   if (error) {
     return console.log(error);
   }
   db = client.db('todoapp');
-  http.listen(process.env.PORT || 8080, function () {
+  http.listen(port, function () {
     console.log(
       'Express server listening on port %d in %s mode',
       this.address().port,
