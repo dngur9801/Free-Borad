@@ -24,7 +24,7 @@ setInterval(function () {
   http.get('http://dngur9801.herokuapp.com');
 }, 600000);
 /* TODO 기능 */
-MongoClient.connect(process.env.DB_URL, function (error, client) {
+MongoClient.connect(process.env.MONGODB_URI, function (error, client) {
   if (error) {
     return console.log(error);
   }
