@@ -70,7 +70,7 @@ app.get('/write', function (request, response) {
 });
 
 app.get('/', function (request, response) {
-  response.render('index.ejs');
+  response.render('login.ejs');
 });
 
 app.get('/edit/:id', function (request, response) {
