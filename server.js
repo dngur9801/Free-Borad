@@ -19,7 +19,6 @@ app.use('/public', express.static('public'));
 
 var db;
 
-/* TODO 기능 */
 let port = process.env.PORT || 8080;
 MongoClient.connect(process.env.MONGODB_URI, function (error, client) {
   if (error) {
@@ -35,15 +34,6 @@ MongoClient.connect(process.env.MONGODB_URI, function (error, client) {
   });
 });
 
-app.get('/edit/:id', function (request, response) {
-  db.collection('post').findOne(
-    { _id: parseInt(request.params.id) },
-    function (error, result) {
-      response.render('edit.ejs', { post: result });
-    }
-  );
-});
-
 /* 로그인 기능 */
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
@@ -54,6 +44,47 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+
+/* 로그인 기능  끝 */
+
+/* 아이디와 비밀번호 검토 */
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: 'id',
+      passwordField: 'pw',
+      session: true,
+      passReqToCallback: false,
+    },
+    function (입력한아이디, 입력한비번, done) {
+      db.collection('login').findOne(
+        { id: 입력한아이디 },
+        function (에러, 결과) {
+          if (에러) return done(에러);
+          if (!결과)
+            return done(null, false, { message: '존재하지않는 아이디요' });
+          bcrypt.compare(입력한비번, 결과.pw, (err, same) => {
+            if (same) {
+              return done(null, 결과);
+            } else {
+              return done(null, false, { message: '비번틀렸어요' });
+            }
+          });
+        }
+      );
+    }
+  )
+);
+
+/* 세션 만들고 세션아이디 발급해서 쿠키로 보내기*/
+passport.serializeUser(function (user, done) {
+  done(null, user.id);
+});
+passport.deserializeUser(function (아이디, done) {
+  db.collection('login').findOne({ id: 아이디 }, function (error, result) {
+    done(null, result);
+  });
+});
 
 app.get('/login', function (request, response) {
   response.render('login');
@@ -86,6 +117,15 @@ app.post('/idcheck', function (req, res) {
       });
     });
 });
+
+app.get('/edit/:id', function (request, response) {
+  db.collection('post').findOne(
+    { _id: parseInt(request.params.id) },
+    function (error, result) {
+      response.render('edit.ejs', { post: result });
+    }
+  );
+});
 app.put('/edit', function (request, response) {
   db.collection('post').updateOne(
     { _id: parseInt(request.body.id) },
@@ -98,7 +138,7 @@ app.put('/edit', function (request, response) {
   );
 });
 
-app.get('/', loginCheck, function (request, response) {
+app.get('/', function (request, response) {
   response.render('login.ejs');
 });
 
@@ -145,44 +185,6 @@ function loginCheck(request, response, next) {
     );
   }
 }
-/* 아이디와 비밀번호 검토 */
-passport.use(
-  new LocalStrategy(
-    {
-      usernameField: 'id',
-      passwordField: 'pw',
-      session: true,
-      passReqToCallback: false,
-    },
-    function (입력한아이디, 입력한비번, done) {
-      db.collection('login').findOne(
-        { id: 입력한아이디 },
-        function (에러, 결과) {
-          if (에러) return done(에러);
-          if (!결과)
-            return done(null, false, { message: '존재하지않는 아이디요' });
-          bcrypt.compare(입력한비번, 결과.pw, (err, same) => {
-            if (same) {
-              return done(null, 결과);
-            } else {
-              return done(null, false, { message: '비번틀렸어요' });
-            }
-          });
-        }
-      );
-    }
-  )
-);
-
-/* 세션 만들고 세션아이디 발급해서 쿠키로 보내기*/
-passport.serializeUser(function (user, done) {
-  done(null, user.id);
-});
-passport.deserializeUser(function (아이디, done) {
-  db.collection('login').findOne({ id: 아이디 }, function (error, result) {
-    done(null, result);
-  });
-});
 
 app.get('/list', loginCheck, function (request, response) {
   db.collection('post')
@@ -270,7 +272,6 @@ app.post('/comment', function (req, res) {
   db.collection('counter').findOne(
     { name: '댓글갯수' },
     function (err, result) {
-      console.log(result);
       totalNum = result.totalcomment;
 
       const storage = {
@@ -321,7 +322,6 @@ app.get('/detail/:id', loginCheck, function (request, response) {
               }
             }
           );
-          console.log(comment);
           response.render('detail.ejs', {
             comment: comment,
             data: result,
