@@ -33,10 +33,19 @@
         background-color: rgb(236, 251, 255);
       }
     </style>
+    <script>
+      //  if('<%=user%>' == '') {
+      //    history.back();
+      //    alert('잘못된 접근입니다.')
+      //    return
+      //   } else {
+      //     alert('환영합니다')
+      //   }
+    </script>
   </head>
   <body>
     <%- include('nav.html') %>
-    
+      
     <div class="container mt-3">
       <ol class="breadcrumb justify-content-center">
         <li
@@ -113,7 +122,8 @@
       crossorigin="anonymous"
     ></script>
   </body>
-  <script>
+  <script type="text/javascript">
+ 
     document.querySelector('#search').addEventListener('submit', (e) => {
       e.preventDefault();
       const inputVal = document.querySelector('#search-input').value;

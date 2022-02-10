@@ -194,17 +194,7 @@
       }
     });
 
-    const now = new Date(); 
-const utcNow = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
-const koreaTimeDiff = 9 * 60 * 60 * 1000; 
-const koreaNow = new Date(utcNow + koreaTimeDiff); 
-const datearr = String(koreaNow).split(' ')
 
-const year = now.getFullYear();
-const month = ('0' + (now.getMonth() + 1)).slice(-2);
-const day = ('0' + now.getDate()).slice(-2);
-const dateString = year + '-' + month + '-' + day;
-const currentTime = dateString + ' ' + datearr[4]
 
 
   </script>

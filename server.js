@@ -35,56 +35,11 @@ MongoClient.connect(process.env.MONGODB_URI, function (error, client) {
   });
 });
 
-app.get('/list', function (request, response) {
-  db.collection('post')
-    .find()
-    .sort({ 날짜정렬: -1 })
-    .toArray(function (error, result) {
-      response.render('list.ejs', { posts: result, view: request.query });
-    });
-});
-
-app.get('/search', (request, response) => {
-  var 검색조건 = [
-    {
-      $search: {
-        index: 'titleSearch',
-        text: {
-          query: request.query.value,
-          path: '제목',
-        },
-      },
-    },
-  ];
-  db.collection('post')
-    .aggregate(검색조건)
-    .toArray((error, result) => {
-      response.render('search.ejs', { search: result });
-    });
-});
-
-app.get('/write', function (request, response) {
-  response.render('write.ejs');
-});
-
-app.get('/', function (request, response) {
-  response.render('login.ejs');
-});
-
 app.get('/edit/:id', function (request, response) {
   db.collection('post').findOne(
     { _id: parseInt(request.params.id) },
     function (error, result) {
       response.render('edit.ejs', { post: result });
-    }
-  );
-});
-app.put('/edit', function (request, response) {
-  db.collection('post').updateOne(
-    { _id: parseInt(request.body.id) },
-    { $set: { 제목: request.body.title, 내용: request.body.content } },
-    function (error, result) {
-      response.render('edit_success.ejs');
     }
   );
 });
@@ -131,21 +86,63 @@ app.post('/idcheck', function (req, res) {
       });
     });
 });
+app.put('/edit', function (request, response) {
+  db.collection('post').updateOne(
+    { _id: parseInt(request.body.id) },
+    { $set: { 제목: request.body.title, 내용: request.body.content } },
+    function (error, result) {
+      response.send(
+        '<script>alert("글수정이 완료되었습니다");location.href="/list"</script>'
+      );
+    }
+  );
+});
+
+app.get('/', loginCheck, function (request, response) {
+  response.render('login.ejs');
+});
+
+app.get('/search', loginCheck, (request, response) => {
+  var 검색조건 = [
+    {
+      $search: {
+        index: 'titleSearch',
+        text: {
+          query: request.query.value,
+          path: '제목',
+        },
+      },
+    },
+  ];
+  db.collection('post')
+    .aggregate(검색조건)
+    .toArray((error, result) => {
+      response.render('search.ejs', { search: result });
+    });
+});
+app.get('/write', loginCheck, function (request, response) {
+  response.render('write.ejs');
+});
 
 app.get('/mypage', loginCheck, function (request, response) {
   db.collection('post')
     .find({ 작성자: request.user.id })
     .sort({ 날짜정렬: -1 })
     .toArray(function (error, result) {
-      response.render('mypage.ejs', { user: request.user, userBoard: result });
+      response.render('mypage.ejs', {
+        user: request.user,
+        userBoard: result,
+        checkLogin: checkLogin,
+      });
     });
 });
-
 function loginCheck(request, response, next) {
   if (request.user) {
     next();
   } else {
-    response.send('로그인 안함');
+    response.send(
+      '<script>alert("로그인 하셔야 이용가능합니다.");location.href = "/login"</script>'
+    );
   }
 }
 /* 아이디와 비밀번호 검토 */
@@ -187,6 +184,19 @@ passport.deserializeUser(function (아이디, done) {
   });
 });
 
+app.get('/list', loginCheck, function (request, response) {
+  db.collection('post')
+    .find()
+    .sort({ 날짜정렬: -1 })
+    .toArray(function (error, result) {
+      response.render('list.ejs', {
+        posts: result,
+        view: request.query,
+        user: request.user,
+      });
+    });
+});
+
 app.get('/logout', function (req, res) {
   req.logout();
   res.redirect('/login');
@@ -204,7 +214,9 @@ app.post('/register', function (request, response) {
 });
 
 app.post('/add', function (request, response) {
-  response.render('write_success.ejs');
+  response.send(
+    '<script>alert("글등록이 완료되었습니다");location.href="/list"</script>'
+  );
 
   db.collection('counter').findOne(
     { name: '게시물갯수' },
@@ -282,7 +294,7 @@ app.post('/comment', function (req, res) {
   );
 });
 
-app.get('/detail/:id', function (request, response) {
+app.get('/detail/:id', loginCheck, function (request, response) {
   let answer;
   let comment;
   db.collection('comment')
