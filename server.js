@@ -19,7 +19,7 @@ app.use('/public', express.static('public'));
 
 var db;
 
-let port = process.env.PORT || 8080;
+let port = process.env.PORT || 8079;
 MongoClient.connect(process.env.MONGODB_URI, function (error, client) {
   if (error) {
     return console.log(error);
@@ -172,7 +172,6 @@ app.get('/mypage', loginCheck, function (request, response) {
       response.render('mypage.ejs', {
         user: request.user,
         userBoard: result,
-        checkLogin: checkLogin,
       });
     });
 });
