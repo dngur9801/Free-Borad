@@ -1,0 +1,12 @@
+.subject {
+  text-decoration: none;
+  color: black;
+  cursor: pointer;
+}
+.subject:hover {
+  color: black;
+  text-decoration: underline;
+}
+.table tbody tr:nth-child(odd) {
+  background-color: rgb(236, 251, 255);
+}

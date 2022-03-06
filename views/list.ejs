@@ -17,35 +17,52 @@
     />
 
     <link rel="stylesheet" href="/public/main.css" />
-
+    <link rel="stylesheet" href="/public/board_color.css">
     <title>자유게시판</title>
-    <style>
-      .subject {
-        text-decoration: none;
-        color: black;
-        cursor: pointer;        
-      }
-      .subject:hover {
-        color: black;
-        text-decoration: underline;
-      }
-      .table tbody tr:nth-child(odd) {
-        background-color: rgb(236, 251, 255);
-      }
-    </style>
+   
     <script>
-      //  if('<%=user%>' == '') {
-      //    history.back();
-      //    alert('잘못된 접근입니다.')
-      //    return
-      //   } else {
-      //     alert('환영합니다')
-      //   }
+ 
     </script>
   </head>
-  <body>
-    <%- include('nav.html') %>
-      
+  <body><nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">자유게시판</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav" id="active">
+        <li class="nav-item">
+          <a class="nav-link" id="mypage" href="/mypage"
+            >마이페이지 <span class="sr-only">(current)</span></a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/write" id="write">글쓰기</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/list" id="list">게시물</a>
+        </li>
+        <%if (user) { %>
+        <li class="nav-item">
+          <a class="nav-link" id="logout" style="cursor: pointer">로그아웃</a>
+        </li>
+        <%} else {%>
+          <li class="nav-item">
+            <a href="/login" class="nav-link" id="login" style="cursor: pointer">로그인</a>
+          </li>
+          <% } %>
+      </ul>
+    </div>
+  </nav>
+  
     <div class="container mt-3">
       <ol class="breadcrumb justify-content-center">
         <li
@@ -178,5 +195,14 @@
 
   pageNum.forEach(item => item.addEventListener('click',pageNumClick))
     document.querySelector('#list').classList.add('active');
+
+    const logout = document.querySelector('#logout');
+  logout.addEventListener('click', e => {
+    if (confirm('로그아웃 하시겠습니까?')) {
+      e.target.setAttribute('href', '/logout');
+      document.cookie =
+        connect.sid + '=; expires=Thu, 01 Jan 1999 00:00:10 GMT;';
+    }
+  });
   </script>
 </html>

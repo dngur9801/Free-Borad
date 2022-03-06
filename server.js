@@ -56,22 +56,19 @@ passport.use(
       session: true,
       passReqToCallback: false,
     },
-    function (입력한아이디, 입력한비번, done) {
-      db.collection('login').findOne(
-        { id: 입력한아이디 },
-        function (에러, 결과) {
-          if (에러) return done(에러);
-          if (!결과)
-            return done(null, false, { message: '존재하지않는 아이디요' });
-          bcrypt.compare(입력한비번, 결과.pw, (err, same) => {
-            if (same) {
-              return done(null, 결과);
-            } else {
-              return done(null, false, { message: '비번틀렸어요' });
-            }
-          });
-        }
-      );
+    function (inputId, inputPw, done) {
+      db.collection('login').findOne({ id: inputId }, function (에러, 결과) {
+        if (에러) return done(에러);
+        if (!결과)
+          return done(null, false, { message: '존재하지않는 아이디요' });
+        bcrypt.compare(inputPw, 결과.pw, (err, same) => {
+          if (same) {
+            return done(null, 결과);
+          } else {
+            return done(null, false, { message: '비번틀렸어요' });
+          }
+        });
+      });
     }
   )
 );
@@ -142,7 +139,7 @@ app.get('/', function (request, response) {
   response.render('login.ejs');
 });
 
-app.get('/search', loginCheck, (request, response) => {
+app.get('/search', (request, response) => {
   var 검색조건 = [
     {
       $search: {
@@ -157,7 +154,7 @@ app.get('/search', loginCheck, (request, response) => {
   db.collection('post')
     .aggregate(검색조건)
     .toArray((error, result) => {
-      response.render('search.ejs', { search: result });
+      response.render('search.ejs', { search: result, user: request.user });
     });
 });
 app.get('/write', loginCheck, function (request, response) {
@@ -180,12 +177,15 @@ function loginCheck(request, response, next) {
     next();
   } else {
     response.send(
-      '<script>alert("로그인 하셔야 이용가능합니다.");location.href = "/login"</script>'
+      `<script>
+       alert("로그인 하셔야 이용가능합니다.");
+       history.go(-1)
+       </script>`
     );
   }
 }
 
-app.get('/list', loginCheck, function (request, response) {
+app.get('/list', function (request, response) {
   db.collection('post')
     .find()
     .sort({ 날짜정렬: -1 })
